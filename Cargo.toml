@@ -38,7 +38,7 @@ async-openai = { version = "0.42.2", features = ["chat-completion", "embedding"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
-hickory-resolver = "0.24"
+hickory-resolver = "0.26"
 hickory-proto = "0.24"
 wiremock = "0.6"
 assert_cmd = "2"
