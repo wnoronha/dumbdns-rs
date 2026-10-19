@@ -1,0 +1,49 @@
+name: release
+on:
+  push:
+    tags:
+      - "v*"
+permissions:
+  contents: write
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            bin: dumbdns
+            archive: dumbdns-v0.1.0-linux-amd64.tar.gz
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            bin: dumbdns
+            archive: dumbdns-v0.1.0-linux-arm64.tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bin: dumbdns.exe
+            archive: dumbdns-v0.1.0-windows-amd64.zip
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            bin: dumbdns
+            archive: dumbdns-v0.1.0-macos-arm64.tar.gz
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: package (unix)
+        if: runner.os != 'Windows'
+        run: |
+          cp target/${{ matrix.target }}/release/dumbdns ./dumbdns
+          tar czf ${{ matrix.archive }} dumbdns README.md LICENSE docs
+      - name: package (windows)
+        if: runner.os == 'Windows'
+        run: |
+          copy target\${{ matrix.target }}\release\dumbdns.exe dumbdns.exe
+          7z a ${{ matrix.archive }} dumbdns.exe README.md LICENSE docs
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.archive }}
